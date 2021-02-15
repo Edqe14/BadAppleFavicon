@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link id="fav" rel="shortcut icon">
+
+  <!-- <script src="./scripts/socket.io-client/dist/socket.io.min.js"></script> -->
+</head>
+<body style="background-color: #0f0f0f;">
+  <img id="prev">
+  <script>
+    const green = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAoHBwgHBgoICAgLCgoLDhgQDg0NDh0VFhEYIx8lJCIfIiEmKzcvJik0KSEiMEExNDk7Pj4+JS5ESUM8SDc9Pjv/2wBDAQoLCw4NDhwQEBw7KCIoOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozv/wAARCAAQABADASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAX/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFAEBAAAAAAAAAAAAAAAAAAAAB//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/AKwA5HT/2Q==';
+    const transparent = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAAAXNSR0IB2cksfwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAANQTFRFAAAAp3o92gAAAAF0Uk5TAEDm2GYAAAAMSURBVHicY2AgDQAAADAAARaJmtEAAAAASUVORK5CYII=';
+
+    const fav = document.getElementById('fav');
+    const prev = document.getElementById('prev');
+
+    // w = window
+    // t = tab
+    const w = +(window.location.href.match(/w=(\d+)/) || [])[1];
+    const t = +(window.location.href.match(/t=(\d+)/) || [])[1];
+    if (!w || !t) alert('missing required parameter "w" or "t"');
+    else {
+      document.title = `client ${w}, ${t}`;
+      fav.href = transparent;
+      
+      (async function () {
+        window.frames = [];
+        window.delay = 1000;
+        let frameCount = 1;
+        let status = 'idle';
+
+        const wait = setInterval(() => {
+          if (new Date().getMinutes() === 16) {
+            start();
+            clearInterval(wait);
+          }
+        }, 20);
+
+        function start (delay) {
+          if (status === 'started') return;
+          status = 'started';
+          if (delay) window.delay = delay;
+          window.timer = setInterval(() => {
+            const frame = window.frames[frameCount - 1];
+            if (!frame) {
+              clearInterval(window.timer);
+              status = 'idle';
+              return;
+              // return socket.emit('stopped');
+            }
+
+            fav.href = frame;
+            frameCount++;
+
+            // if (w === 1 && t === 1) socket.emit('frameUpdate', frameCount);
+          }, window.delay);
+          // socket.emit('started');
+        }
+
+        // socket.on('start', (delay) => {
+        //   start(delay);
+        // });
+
+        // socket.on('stop', () => {
+        //   if (status === 'idle') return;
+
+        //   clearInterval(window.timer);
+        //   status = 'idle';
+        //   frameCount = 0;
+
+        //   fav.href = transparent;
+        //   socket.emit('stopped');
+        // });
+
+        // socket.on('frame', ({ frame, data }) => {
+        //   if (frame === 'all') window.frames = data;
+        //   else window.frames[frame - 1] = data;
+        // });
+
+        // socket.on('sync', () => {
+        //   fav.href = green;
+        //   setTimeout(() => fav.href = transparent, 2000);
+        // });
+        
+        // socket.on('error', console.error);
+        
+        // socket.on('connect', async () => {
+        //   socket.emit('frame', {
+        //       frame: 'all',
+        //       offsetX: t,
+        //       offsetY: w
+        //     });
+            
+            
+        //     socket.removeAllListeners('connect');
+        // });
+          
+        // window.addEventListener('beforeunload',(event) =>{
+        //   socket.close();
+        // });
+
+        const frames = await fetch(`/frames?frame=all&offsetX=${t}&offsetY=${w}`).then(res => res.json());
+        window.frames = frames.data;
+      })();
+    }
+  </script>
+</body>
+</html>

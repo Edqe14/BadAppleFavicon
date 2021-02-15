@@ -1,0 +1,36 @@
+{
+  "name": "badapplefavicon",
+  "version": "2.0.0",
+  "description": "1. NodeJS v14+\r 2. FFMPEG\r 3. Decent PC and CPU\r 4. Hope :^)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node .",
+    "dev": "nodemon ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Edqe14/BadAppleFavicon.git"
+  },
+  "author": "Edqe_",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Edqe14/BadAppleFavicon/issues"
+  },
+  "homepage": "https://github.com/Edqe14/BadAppleFavicon#readme",
+  "dependencies": {
+    "canvas": "^2.6.1",
+    "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "fluent-ffmpeg": "^2.1.2",
+    "morgan": "^1.10.0",
+    "socket.io": "^3.1.1",
+    "winston": "^3.3.3"
+  },
+  "devDependencies": {
+    "@types/socket.io": "^2.1.13",
+    "nodemon": "^2.0.7",
+    "socket.io-client": "^3.1.1"
+  }
+}
