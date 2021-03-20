@@ -1,4 +1,5 @@
 module.exports = {
+  root: './files',
   filename: './files/help.mp4',
   size: {
     width: 320,
@@ -11,7 +12,9 @@ module.exports = {
   fps: 20,
   out: './files/wtf.mp4',
   framesDir: './files/wtf_frames',
-  skipProcessing: false,
+  skipProcessing: true,
   enableCache: true,
-  cacheLifetime: 10 * 60 * 1000
+  cacheLifetime: 10 * 60 * 1000,
+  saveCacheToFile: true,
+  automaticallyOpenFirefox: true
 };

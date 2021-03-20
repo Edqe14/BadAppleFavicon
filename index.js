@@ -6,12 +6,25 @@ const canvas = require('canvas');
 const cors = require('cors');
 const http = require('http');
 const path = require('path');
+const open = require('open');
 const fs = require('fs');
 
 const logger = require('./utils/logger.js');
 const config = require('./config.js');
 
-const cache = new Map();
+if (!config.root?.length || !config.filename?.length || !config.out?.length || !config.framesDir?.length) {
+  logger.error('Invalid required paths');
+  process.exit(1);
+}
+
+if (!fs.existsSync(config.root)) fs.mkdirSync(config.root);
+
+const cache = new Map(fs.existsSync(path.join(__dirname, config.root, 'cache.json')) ? require(path.join(__dirname, config.root, 'cache.json')) : []);
+cache.forEach((val, key) => {
+  if (typeof val === 'object' && val?.expire && !isNaN(val?.expire) && parseInt(val.expire) > Date.now()) return;
+  return cache.delete(key);
+});
+
 const frames = [];
 const format = 'png';
 let framesReady = false;
@@ -46,6 +59,9 @@ if (!config.skipProcessing) {
   const ffmpeg = require('fluent-ffmpeg');
   if (!fs.existsSync(config.filename)) logger.error('Missing original video file on the specified path!');
   else {
+    if (config.size.width % config.segment.width !== 0) logger.warn(`Rescale width cannot be divided by ${config.segment.width}`);
+    if (config.size.height % config.segment.height !== 0) logger.warn(`Rescale height cannot be divided by ${config.segment.height}`);
+
     ffmpeg(config.filename)
       .noAudio()
       .complexFilter(`scale=${config.size.width}:${config.size.height}`)
@@ -167,7 +183,8 @@ app.get('/frames', async (req, res) => {
       width: c.width,
       height: c.height,
       data: arr,
-      format
+      format,
+      expire: Date.now() + config.cacheLifetime
     });
     setTimeout(() => cache.delete(frame + offsetX + offsetY), config.cacheLifetime);
 
@@ -197,7 +214,8 @@ app.get('/frames', async (req, res) => {
       width: c.width,
       height: c.height,
       data,
-      format
+      format,
+      expire: Date.now() + config.cacheLifetime
     });
     setTimeout(() => cache.delete(frame + offsetX + offsetY), config.cacheLifetime);
 
@@ -222,7 +240,8 @@ app.get('/frames', async (req, res) => {
     width: c.width,
     height: c.height,
     data,
-    format
+    format,
+    expire: Date.now() + config.cacheLifetime
   });
   setTimeout(() => cache.delete(frame + offsetX + offsetY), config.cacheLifetime);
 
@@ -238,6 +257,13 @@ app.get('/frames', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 80;
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
   logger.info(`Listening to port ${PORT}`);
+  if (config.automaticallyOpenFirefox) await open(`localhost:${PORT}/opener.html?t=${config.size.width / config.segment.width}`, { app: { name: open.apps.firefox } });
 });
+
+process.on('exit', () => {
+  if (config.saveCacheToFile) fs.writeFileSync(path.join(__dirname, config.root, 'cache.json'), JSON.stringify([...cache]));
+  process.exit(1);
+});
+process.on('SIGINT', () => process.emit('exit', 1));
