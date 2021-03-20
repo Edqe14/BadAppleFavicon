@@ -48,7 +48,7 @@
           .then(res => window.delay = res.interval);
 
         const wait = setInterval(() => {
-          if ((new Date()[m] || (() => 0))() === o) {
+          if (new Date()[m]() === o) {
             start();
             clearInterval(wait);
           }
@@ -71,6 +71,25 @@
             frameCount++;
           }, window.delay);
         }
+
+        async function autoClose () {
+          const res = await fetch('/killAll');
+
+          if (res.status !== 200) {
+            console.log('autoClose error', res.statusText);
+
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await autoClose();
+          } else {
+            const body = await res.json();
+            console.log(body)
+            if (body.disable) return;
+
+            if (body.kill) return window.close();
+            await autoClose();
+          }
+        }
+        autoClose();
 
         const frames = await fetch(`/frames?frame=all&offsetX=${t}&offsetY=${w}`).then(res => res.json());
         window.frames = frames.data;

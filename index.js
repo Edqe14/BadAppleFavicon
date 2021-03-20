@@ -19,6 +19,7 @@ if (!config.root?.length || !config.filename?.length || !config.out?.length || !
 
 if (!fs.existsSync(config.root)) fs.mkdirSync(config.root);
 
+const pollings = [];
 const cache = new Map(fs.existsSync(path.join(__dirname, config.root, 'cache.json')) ? require(path.join(__dirname, config.root, 'cache.json')) : []);
 cache.forEach((val, key) => {
   if (typeof val === 'object' && val?.expire && !isNaN(val?.expire) && parseInt(val.expire) > Date.now()) return;
@@ -30,6 +31,7 @@ const format = 'png';
 let framesReady = false;
 let interval = 1000;
 
+const sleep = (ms = 5000) => new Promise(resolve => setTimeout(resolve, ms));
 const waitFramesReady = () => new Promise(resolve => {
   const check = () => {
     if (framesReady) return resolve();
@@ -148,6 +150,18 @@ app.get('/meta', (_, res) => {
   });
 });
 
+app.get('/killAll', (_, res) => {
+  res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+
+  if (!config.closeAllTabsOnExit) {
+    return res.json({
+      disable: true
+    });
+  }
+
+  pollings.push(res);
+});
+
 app.get('/frames', async (req, res) => {
   const frame = req.query.frame;
   const offsetX = req.query.offsetX;
@@ -262,8 +276,17 @@ server.listen(PORT, async () => {
   if (config.automaticallyOpenFirefox) await open(`localhost:${PORT}/opener.html?t=${config.size.width / config.segment.width}`, { app: { name: open.apps.firefox } });
 });
 
-process.on('exit', () => {
-  if (config.saveCacheToFile) fs.writeFileSync(path.join(__dirname, config.root, 'cache.json'), JSON.stringify([...cache]));
-  process.exit(1);
+let exiting = false;
+process.on('exit', async () => {
+  if (exiting) return;
+  exiting = true;
+
+  if (config.closeAllTabsOnExit) {
+    for (const res of pollings) {
+      res.json({ kill: true });
+      await sleep(50);
+    }
+  }
+  if (config.saveCacheToFile) fs.writeFile(path.join(__dirname, config.root, 'cache.json'), JSON.stringify([...cache]), () => process.exit(1));
 });
 process.on('SIGINT', () => process.emit('exit', 1));

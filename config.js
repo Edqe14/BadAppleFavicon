@@ -16,5 +16,6 @@ module.exports = {
   enableCache: true,
   cacheLifetime: 10 * 60 * 1000,
   saveCacheToFile: true,
-  automaticallyOpenFirefox: true
+  automaticallyOpenFirefox: true,
+  closeAllTabsOnExit: false
 };
