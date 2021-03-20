@@ -28,8 +28,10 @@
     // o = timeout
     const w = +(window.location.href.match(/w=(\d+)/) || [])[1];
     const t = +(window.location.href.match(/t=(\d+)/) || [])[1];
-    const m = preset[(window.location.href.match(/m=(.{3})/) || [null, 'sec'])[1]];
-    const o = +(window.location.href.match(/o=(\d+)/) || [null, '0'])[1];
+    const m = preset[(window.location.href.match(/m=(.{3})/) || [null, 'sec'])[1] || 'sec'];
+    const o = +(window.location.href.match(/o=(\d+)/) || [null, '0'])[1] || 0;
+    console.log('config', w, t, m, o);
+
     if (!w || !t) alert('missing required parameter "w" or "t"');
     else {
       document.title = `client ${w}, ${t}`;
@@ -46,7 +48,7 @@
           .then(res => window.delay = res.interval);
 
         const wait = setInterval(() => {
-          if (new Date()[m]() === o) {
+          if ((new Date()[m] || (() => 0))() === o) {
             start();
             clearInterval(wait);
           }
