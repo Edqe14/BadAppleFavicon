@@ -5,8 +5,22 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Opener</title>
-  <script>
-    function run (w = 1, t = 18) {
+</head>
+<body>
+  <input id="w" type="number" value=1>
+  <input id="t" type="number" value=24>
+  <button onclick="run(document.getElementById('w').value, document.getElementById('t').value)">open all</button>
+
+  <script defer>
+    // w = window offset
+    // t = tab
+    const wO = +(window.location.href.match(/w=(\d+)/) || [])[1] || 1;
+    const tO = +(window.location.href.match(/t=(\d+)/) || [])[1] || 18;
+
+    document.getElementById('w').value = wO;
+    document.getElementById('t').value = tO;
+
+    function run (w = wO, t = tO) {
       for (let i = t; i >= 1; i--) {
         window.open(`http://${location.host}?w=${w}&t=${i}`, '_blank');
       }
@@ -14,10 +28,5 @@
       self.close();
     }
   </script>
-</head>
-<body>
-  <input id="w" type="number" value=1>
-  <input id="t" type="number" value=24>
-  <button onclick="run(document.getElementById('w').value, document.getElementById('t').value)">open all</button>
 </body>
 </html>
